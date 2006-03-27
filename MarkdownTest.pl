@@ -3,7 +3,7 @@
 #
 # MarkdownTester -- Run tests for Markdown implementations
 #
-# Copyright (c) 2004 John Gruber
+# Copyright (c) 2004-2005 John Gruber
 # <http://daringfireball.net/projects/markdown/>
 #
 
@@ -12,8 +12,8 @@ use warnings;
 use Getopt::Long;
 use Benchmark;
 
-our $VERSION = '1.0';
-# Mon 13 Dec 2004
+our $VERSION = '1.0.2';
+# Sat 24 Dec 2005
 
 my $time_start = new Benchmark;
 my $test_dir = "Tests";
@@ -41,6 +41,7 @@ unless (-x $script)   { die "$script is not executable.\n"; }
 my $tests_passed = 0;
 my $tests_failed = 0;
 
+TEST:
 foreach my $testfile (glob "$test_dir/*.md") {
 	my $testname = $testfile;
 	$testname =~ s{.*/(.+)\.md$}{$1}i; 
@@ -49,7 +50,10 @@ foreach my $testfile (glob "$test_dir/*.md") {
 	# Look for a corresponding .html file for each .md file:
 	my $resultfile = $testfile;
 	$resultfile =~ s{\.md$}{\.html}i;
-	unless (-f $resultfile) {die "'$resultfile' does not exist.\n";}
+	unless (-f $resultfile) {
+		print "'$resultfile' does not exist.\n\n";
+		next TEST;
+	}
 	
 	# open(TEST, $testfile)     || die("Can't open testfile: $!");
 	open(RESULT, $resultfile) || die("Can't open resultfile: $!");
@@ -57,7 +61,7 @@ foreach my $testfile (glob "$test_dir/*.md") {
 	# my $t_input = <TEST>;
 	my $t_result = <RESULT>;
 
-	my $t_output = `$script '$testfile'`;
+	my $t_output = `'$script' '$testfile'`;
 
 	# Normalize the output and expected result strings:
 	$t_result =~ s/\s+\z//; # trim trailing whitespace
@@ -76,6 +80,18 @@ foreach my $testfile (glob "$test_dir/*.md") {
 	}
 	else {
 		print "FAILED\n\n";
+# This part added by JM to print diffs
+        open(OUT, '>tmp1') or die $!;
+        print OUT $t_output or die $!;
+        open(RES, '>tmp2') or die $!;
+        print RES $t_result or die $!;
+        print $testfile,"\n";
+        print `diff tmp1 tmp2`;
+        close RES;
+        close OUT;
+        print "\n";
+        `rm tmp?`;
+# End of added part
 		$tests_failed++;
 	}
 }
@@ -141,13 +157,17 @@ off.
 
 =head1 VERSION HISTORY
 
-1.0	Mon 13 Dec 2004
+1.0	Mon 13 Dec 2004-2005
 
+1.0.1 Mon 19 Sep 2005
+
+	+	Better handling of case when foo.md exists, but foo.html doesn't.
+		It now prints a message and moves on, rather than dying.
 
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2004 John Gruber  
+Copyright (c) 2004-2005 John Gruber  
 <http://daringfireball.net/>   
 All rights reserved.
 
