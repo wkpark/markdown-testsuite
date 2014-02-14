@@ -81,16 +81,16 @@ foreach my $testfile (glob "$test_dir/*.md") {
 	else {
 		print "FAILED\n\n";
 # This part added by JM to print diffs
-        open(OUT, '>tmp1') or die $!;
+        open(OUT, '>Actual') or die $!;
         print OUT $t_output or die $!;
-        open(RES, '>tmp2') or die $!;
+        open(RES, '>Expected') or die $!;
         print RES $t_result or die $!;
         print $testfile,"\n";
-        print `diff tmp1 tmp2`;
+        print `diff -uBbw Expected Actual`;
         close RES;
         close OUT;
         print "\n";
-        `rm tmp?`;
+        `rm Expected Actual`;
 # End of added part
 		$tests_failed++;
 	}
